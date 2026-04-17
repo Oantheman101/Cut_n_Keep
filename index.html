@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>My React App</title>
+
+  <!-- React -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+  <!-- Babel (lets browser understand JSX) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body { font-family: Arial; padding: 20px; }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+
+  // YOUR JSX GOES HERE
+    
+import { useState, useEffect, useCallback } from "react";
+
+const PROGRAM = {
+  block1: {
+    name: "BLOCK 1: FOUNDATION",
+    weeks: [
+      { num: 1, label: "Intro Week", type: "intro", rpeNote: "RPE 7-8 · No failure" },
+      { num: 2, label: "Week 2", type: "hard", rpeNote: "RPE 8-9 · Last set to failure" },
+      { num: 3, label: "Week 3", type: "hard", rpeNote: "RPE 8-9 · Last set to failure" },
+      { num: 4, label: "Week 4", type: "hard", rpeNote: "RPE 8-9 · Last set to failure" },
+      { num: 5, label: "Semi-Deload", type: "deload", rpeNote: "RPE 7 · Drop 1 set per exercise" },
+    ],
+  },
+  block2: {
+    name: "BLOCK 2: NOVELTY",
+    weeks: [
+      { num: 6, label: "Intro/Ramp", type: "intro", rpeNote: "RPE 7-8 · No failure" },
+      { num: 7, label: "Week 7", type: "hard", rpeNote: "RPE 8-9 · Last set to failure" },
+      { num: 8, label: "Week 8", type: "hard", rpeNote: "RPE 8-9 · Last set to failure" },
+      { num: 9, label: "Week 9", type: "hard", rpeNote: "RPE 8-9 · Last set to failure" },
+      { num: 10, label: "Full Deload", type: "deload", rpeNote: "RPE 6-7 · Drop 1-2 sets" },
+    ],
+  },
+};
+
+const DAYS = {
+  block1: {
+    1: { name: "Upper 1", subtitle: "Chest/Delt Priority + Back", exercises: [
+      { name: "Machine Chest Press", tier: "S+", sets: 3, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Smith Machine Bench", sub2: "DB Bench Press", notes: "S+ tier. 1s pause at bottom. Maintain pec tension." },
+      { name: "Pec Deck", tier: "A", sets: 2, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Failure + LLPs", rest: "1-2 min", sub1: "Cable Crossover", sub2: "DB Fly", notes: "Max stretch setup. Pause 1s at stretch." },
+      { name: "Cable Lateral Raise", tier: "S+", sets: 3, reps: "12-15", earlyRpe: "~8-9", lastRpe: "Myo-reps", rest: "1-2 min", sub1: "Machine Lat Raise", sub2: "Lean-In DB Lat Raise", notes: "S+ tier. Delt priority. Scapular plane, soft lockout." },
+      { name: "Close-Grip Lat Pulldown", tier: "A", sets: 3, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Neutral-Grip Pulldown", sub2: "Wide-Grip Pulldown", notes: "Lean back ~15°, drive elbows down. Rhomboid-safe." },
+      { name: "Neutral-Grip Cable Row", tier: "S", sets: 2, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Wide-Grip Cable Row", sub2: "Helms Row", notes: "S tier. Cable-based, smooth on rhomboids. Squeeze scapulae." },
+      { name: "OH Cable Triceps Ext (Bar)", tier: "S+", sets: 2, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Failure", rest: "1-2 min", sub1: "OH Cable Ext (Rope)", sub2: "DB Skull Crusher", notes: "S+ tier. 1s pause in stretch. Long head emphasis." },
+    ]},
+    2: { name: "Lower 1", subtitle: "Quad Priority", exercises: [
+      { name: "Machine Squat", tier: "S", sets: 3, reps: "6-8", earlyRpe: "~8-9", lastRpe: "Failure", rest: "3-4 min", sub1: "Smith Machine Squat", sub2: "Leg Press (feet high)", notes: "Quad dominant, no spinal load. Full depth." },
+      { name: "Leg Extension", tier: "A", sets: 3, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Failure + LLPs", rest: "1-2 min", sub1: "Reverse Nordic", sub2: "DB Step-Up", notes: "Jeff's fav. Seat back, 2-3s negative. Quad priority." },
+      { name: "Lying Leg Curl", tier: "—", sets: 3, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure", rest: "1-2 min", sub1: "Seated Leg Curl", sub2: "Nordic Ham Curl", notes: "Max stretch at bottom. Prevent butt popping up." },
+      { name: "Machine Hip Abduction", tier: "S", sets: 2, reps: "12-15", earlyRpe: "~8-9", lastRpe: "Failure", rest: "1-2 min", sub1: "Cable Hip Abduction", sub2: "Lateral Band Walk", notes: "S tier. Lean forward ~30° for glute stretch." },
+      { name: "Standing Calf Raise", tier: "—", sets: 2, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Stretch 30s", rest: "1-2 min", sub1: "Leg Press Calf", sub2: "Donkey Calf Raise", notes: "2s pause at bottom. Roll ankle on balls of feet." },
+      { name: "Cable Crunch", tier: "—", sets: 2, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Failure", rest: "1-2 min", sub1: "Machine Crunch", sub2: "Decline Wtd Crunch", notes: "Round lower back as you crunch. MMC with abs." },
+    ]},
+    4: { name: "Upper 2", subtitle: "Back/Delt Priority + Chest", exercises: [
+      { name: "Neutral-Grip Pulldown", tier: "S", sets: 3, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Wide-Grip Pulldown", sub2: "Half-Kneel 1-Arm PD", notes: "S tier. Lats + mid-back. Rhomboid safe." },
+      { name: "Wide-Grip Cable Row", tier: "S", sets: 2, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Failure + LLPs", rest: "2-3 min", sub1: "Neutral-Grip Cable Row", sub2: "Helms Row", notes: "S tier. Elbows flared ~45°, cable-based, smooth on back." },
+      { name: "Machine Shoulder Press", tier: "A", sets: 3, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Seated DB OHP", sub2: "Cable Shoulder Press", notes: "Jeff's fav press. Delt priority — extra set." },
+      { name: "Reverse Cable Crossover", tier: "S", sets: 2, reps: "12-15", earlyRpe: "~8-9", lastRpe: "Failure", rest: "1-2 min", sub1: "Reverse Pec Deck", sub2: "Bent-Over Rev DB Fly", notes: "S tier. Jeff's rear delt fav. Largest semi-circle." },
+      { name: "Incline DB Press", tier: "A", sets: 2, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Low Incline Machine", sub2: "Low Incline Smith", notes: "~15° incline. Chest touch-up day." },
+      { name: "Bayesian Cable Curl", tier: "S+", sets: 2, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Failure", rest: "1-2 min", sub1: "Incline DB Curl", sub2: "Machine Preacher Curl", notes: "S+ tier. Strict torso, arms behind body, 2-3s neg." },
+    ]},
+    5: { name: "Lower 2", subtitle: "Posterior Chain + Quad Top-Up", exercises: [
+      { name: "Barbell RDL", tier: "A", sets: 3, reps: "6-8", earlyRpe: "~8", lastRpe: "~9 (no fail)", rest: "2-3 min", sub1: "DB RDL", sub2: "45° Back Extension", notes: "Jeff's ham fav. Moderate RPE — spinal load. 3/4 lockout." },
+      { name: "Bulgarian Split Squat", tier: "S", sets: 3, reps: "8-10/leg", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Walking DB Lunge", sub2: "Smith Machine Lunge", notes: "S tier. Quad priority + glute. Long step, slight lean." },
+      { name: "Seated Leg Curl", tier: "—", sets: 2, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Failure + LLPs", rest: "1-2 min", sub1: "Lying Leg Curl", sub2: "Nordic Ham Curl", notes: "Lean forward for max stretch." },
+      { name: "Leg Extension", tier: "A", sets: 2, reps: "12-15", earlyRpe: "~8-9", lastRpe: "Myo-reps", rest: "1-2 min", sub1: "Reverse Nordic", sub2: "DB Step-Up", notes: "Quad top-up. High-effort finishing set." },
+      { name: "Leg Press Calf Press", tier: "—", sets: 2, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Stretch 30s", rest: "1-2 min", sub1: "Seated Calf Raise", sub2: "Donkey Calf Raise", notes: "2s pause at bottom. Second calf hit for the week." },
+      { name: "Roman Chair Leg Raise", tier: "—", sets: 2, reps: "10-20", earlyRpe: "~8-9", lastRpe: "Failure", rest: "1-2 min", sub1: "Hanging Leg Raise", sub2: "Reverse Crunch", notes: "Round lower back as you curl up. Go to RPE 9-10." },
+    ]},
+  },
+  block2: {
+    1: { name: "Upper 1", subtitle: "Chest/Delt Priority + Back", exercises: [
+      { name: "Barbell Incline Press", tier: "A", sets: 3, reps: "6-8", earlyRpe: "~8-9", lastRpe: "Failure", rest: "3-4 min", sub1: "Incline DB Press", sub2: "Incline Smith Press", notes: "Free weight variation. ~30° incline. 1s pause at chest." },
+      { name: "Cable Crossover", tier: "A", sets: 2, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Failure + LLPs", rest: "1-2 min", sub1: "Pec Deck", sub2: "DB Fly", notes: "Different chest isolation from Block 1 Pec Deck." },
+      { name: "Behind-Back Cuffed Lat Raise", tier: "S", sets: 3, reps: "12-15", earlyRpe: "~8-9", lastRpe: "Myo-reps", rest: "1-2 min", sub1: "Cable Y-Raise", sub2: "Lean-In DB Lat Raise", notes: "S tier. Delt priority. 'Y' sweep motion." },
+      { name: "Wide-Grip Pulldown", tier: "S", sets: 3, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Neutral-Grip PD", sub2: "Wide-Grip Pull-Up", notes: "S tier. 1.5x shoulder width. 2-3s negative." },
+      { name: "Seated Cable Row (V-handle)", tier: "S", sets: 2, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Wide-Grip Cable Row", sub2: "Helms Row", notes: "S tier. Different handle from Block 1 for novelty." },
+      { name: "EZ-Bar Skullcrusher", tier: "S", sets: 2, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure", rest: "1-2 min", sub1: "DB Skullcrusher", sub2: "Katana Cable Ext", notes: "S tier. Arc behind head. Elbows slightly flared." },
+    ]},
+    2: { name: "Lower 1", subtitle: "Quad Priority", exercises: [
+      { name: "Smith Machine Squat", tier: "S", sets: 3, reps: "6-8", earlyRpe: "~8-9", lastRpe: "Failure", rest: "3-4 min", sub1: "Machine Squat", sub2: "Leg Press (feet low)", notes: "S tier. Feet forward ~3-6in, lean into bar." },
+      { name: "Leg Extension", tier: "A", sets: 3, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Failure + LLPs", rest: "1-2 min", sub1: "Reverse Nordic", sub2: "DB Step-Up", notes: "Stays as quad priority staple. Seat back, 2-3s neg." },
+      { name: "Seated Leg Curl", tier: "—", sets: 3, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure + LLPs", rest: "1-2 min", sub1: "Lying Leg Curl", sub2: "Nordic Ham Curl", notes: "Lean forward for hamstring stretch." },
+      { name: "Walking DB Lunge", tier: "S+", sets: 2, reps: "10/leg", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Smith Machine Lunge", sub2: "DB Step-Up", notes: "S+ glute tier. Medium strides, minimize rear push-off." },
+      { name: "Standing Calf Raise", tier: "—", sets: 2, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Stretch 30s", rest: "1-2 min", sub1: "Leg Press Calf", sub2: "Donkey Calf Raise", notes: "2s pause at bottom." },
+      { name: "Ab Wheel Rollout", tier: "—", sets: 2, reps: "8-12", earlyRpe: "~8-9", lastRpe: "Failure", rest: "1-2 min", sub1: "LLPT Plank 30s", sub2: "Cable Crunch", notes: "Use abs, not just hip hinge. Progress ROM." },
+    ]},
+    4: { name: "Upper 2", subtitle: "Back/Delt Priority + Chest", exercises: [
+      { name: "Half-Kneel 1-Arm Lat PD", tier: "S", sets: 3, reps: "8-10/arm", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Neutral-Grip PD", sub2: "Close-Grip Lat PD", notes: "S tier. Unilateral. Chest tall, elbow tucked." },
+      { name: "Wide-Grip Cable Row", tier: "S", sets: 2, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Neutral-Grip Cable Row", sub2: "Helms Row", notes: "S tier. Cable-based, gentle on rhomboids." },
+      { name: "Seated DB Shoulder Press", tier: "A", sets: 3, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Machine Shoulder Press", sub2: "Arnold Press", notes: "Free weight delt variation. Elbows break 90°." },
+      { name: "Reverse Pec Deck", tier: "S", sets: 2, reps: "12-15", earlyRpe: "~8-9", lastRpe: "Failure", rest: "1-2 min", sub1: "Rev Cable Crossover", sub2: "Bent-Over Rev DB Fly", notes: "S tier. Swing 'out' not 'back'." },
+      { name: "Machine Chest Press", tier: "S+", sets: 2, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Smith Bench Press", sub2: "DB Bench Press", notes: "S+ tier comes back as chest touch-up." },
+      { name: "Machine Preacher Curl", tier: "S", sets: 2, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Failure", rest: "1-2 min", sub1: "EZ-Bar Cable Curl", sub2: "Incline DB Curl", notes: "S tier. Machine handles stabilization — just squeeze." },
+    ]},
+    5: { name: "Lower 2", subtitle: "Posterior Chain + Quad Top-Up", exercises: [
+      { name: "Dumbbell RDL", tier: "A", sets: 3, reps: "8-10", earlyRpe: "~8", lastRpe: "~9 (no fail)", rest: "2-3 min", sub1: "Barbell RDL", sub2: "45° Back Extension", notes: "Lighter spinal load. Same pattern. 3/4 lockout." },
+      { name: "Leg Press (feet low)", tier: "A", sets: 3, reps: "8-10", earlyRpe: "~8-9", lastRpe: "Failure", rest: "2-3 min", sub1: "Machine Squat", sub2: "Goblet Squat", notes: "Feet low for quad focus. Full depth, no back rounding." },
+      { name: "Lying Leg Curl", tier: "—", sets: 2, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Failure + LLPs", rest: "1-2 min", sub1: "Seated Leg Curl", sub2: "Nordic Ham Curl", notes: "Different hamstring curve from Block 1 seated." },
+      { name: "Leg Extension", tier: "A", sets: 2, reps: "12-15", earlyRpe: "~8-9", lastRpe: "Myo-reps", rest: "1-2 min", sub1: "Reverse Nordic", sub2: "DB Step-Up", notes: "Quad top-up finisher." },
+      { name: "Seated Calf Raise", tier: "—", sets: 2, reps: "10-12", earlyRpe: "~8-9", lastRpe: "Stretch 30s", rest: "1-2 min", sub1: "Leg Press Calf", sub2: "Standing Calf Raise", notes: "Soleus emphasis. 2s pause at bottom." },
+      { name: "Roman Chair Leg Raise", tier: "—", sets: 2, reps: "10-20", earlyRpe: "~8-9", lastRpe: "Failure", rest: "1-2 min", sub1: "Hanging Leg Raise", sub2: "Reverse Crunch", notes: "Round lower back. RPE 9-10." },
+    ]},
+  },
+};
+
+const TIER_COLORS = { "S+": "#dc2626", "S": "#2563eb", "A": "#6b7280", "—": "#4b5563" };
+const SK = "cutkeep-v3";
+const DEFAULT_STATE = { week: 1, logs: {} };
+
+function useAppState() {
+  const [state, setState] = useState(DEFAULT_STATE);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    async function init() {
+      try {
+        if (window.storage) {
+          const result = await window.storage.get(SK);
+          if (mounted && result && result.value) {
+            setState(JSON.parse(result.value));
+          }
+        }
+      } catch (e) {
+        console.log("Storage load failed, using defaults:", e);
+      }
+      if (mounted) setReady(true);
+    }
+    init();
+    return () => { mounted = false; };
+  }, []);
+
+  const save = useCallback(async (newState) => {
+    setState(newState);
+    try {
+      if (window.storage) {
+        await window.storage.set(SK, JSON.stringify(newState));
+      }
+    } catch (e) {
+      console.log("Storage save failed:", e);
+    }
+  }, []);
+
+  return { state, save, ready };
+}
+
+export default function App() {
+  const { state, save, ready } = useAppState();
+  const [activeDay, setActiveDay] = useState(null);
+  const [openEx, setOpenEx] = useState(null);
+
+  useEffect(() => {
+    if (ready && activeDay === null) {
+      const jsDay = new Date().getDay();
+      const map = { 1: 1, 2: 2, 4: 4, 5: 5 };
+      setActiveDay(map[jsDay] || 1);
+    }
+  }, [ready, activeDay]);
+
+  const getBlock = (w) => w <= 5 ? "block1" : "block2";
+  const getWeekInfo = (w) => PROGRAM[getBlock(w)].weeks.find(x => x.num === w);
+
+  const logKey = (w, d, e, s) => w + "_" + d + "_" + e + "_" + s;
+  const getLog = (w, d, e, s) => (state.logs || {})[logKey(w, d, e, s)] || "";
+
+  const setLog = (w, d, e, s, v) => {
+    const newLogs = Object.assign({}, state.logs || {});
+    newLogs[logKey(w, d, e, s)] = v;
+    save(Object.assign({}, state, { logs: newLogs }));
+  };
+
+  const setWeek = (w) => save(Object.assign({}, state, { week: w }));
+
+  const getPrevAvg = (w, d, e) => {
+    if (w <= 1) return null;
+    var pw = w - 1;
+    if (getBlock(pw) !== getBlock(w)) return null;
+    var vals = [];
+    for (var i = 0; i < 4; i++) {
+      var v = (state.logs || {})[logKey(pw, d, e, i)];
+      if (v && !isNaN(parseFloat(v))) vals.push(parseFloat(v));
+    }
+    if (vals.length === 0) return null;
+    var sum = 0;
+    for (var j = 0; j < vals.length; j++) sum += vals[j];
+    return Math.round(sum / vals.length * 10) / 10;
+  };
+
+  const getPrevSets = (w, d, e) => {
+    if (w <= 1 || getBlock(w - 1) !== getBlock(w)) return [];
+    var result = [];
+    for (var i = 0; i < 4; i++) {
+      result.push((state.logs || {})[logKey(w - 1, d, e, i)] || "");
+    }
+    return result;
+  };
+
+  if (!ready || activeDay === null) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#060906", color: "#a3c4a3" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -1 }}>CUT & KEEP</div>
+          <div style={{ fontSize: 11, opacity: 0.4, marginTop: 4 }}>Loading your program...</div>
+        </div>
+      </div>
+    );
+  }
+
+  var week = state.week || 1;
+  var block = getBlock(week);
+  var weekInfo = getWeekInfo(week);
+  var dayData = DAYS[block][activeDay];
+  var typeStyles = {
+    intro: { bg: "#0a1f15", c: "#6ee7b7", l: "INTRO" },
+    hard: { bg: "#1f0a0a", c: "#fca5a5", l: "PUSH" },
+    deload: { bg: "#1f1f0a", c: "#fde68a", l: "DELOAD" },
+  };
+  var ts = typeStyles[weekInfo.type];
+
+  return (
+    <div style={{ background: "#060906", minHeight: "100vh", color: "#d4e4d4", fontFamily: "'DM Sans', -apple-system, sans-serif", maxWidth: 430, margin: "0 auto", paddingBottom: 72 }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet" />
+
+      {/* Header */}
+      <div style={{ padding: "12px 14px 0", position: "sticky", top: 0, zIndex: 100, background: "#060906" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: -0.5, color: "#a3c4a3" }}>CUT & KEEP</div>
+            <div style={{ fontSize: 9, color: "#3d5c3d", fontWeight: 500 }}>{PROGRAM[block].name}</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ background: ts.bg, color: ts.c, padding: "2px 6px", borderRadius: 3, fontSize: 8, fontWeight: 700, letterSpacing: 0.8 }}>{ts.l}</span>
+              <span style={{ fontSize: 14, fontWeight: 800, color: "#a3c4a3" }}>W{week}</span>
+            </div>
+            <div style={{ fontSize: 8, color: "#3d5c3d", marginTop: 1 }}>{weekInfo.rpeNote}</div>
+          </div>
+        </div>
+
+        {/* Week pills */}
+        <div style={{ display: "flex", gap: 2, margin: "8px 0 0" }}>
+          {[1,2,3,4,5,6,7,8,9,10].map(function(n) {
+            var active = n === week;
+            return (
+              <button key={n} onClick={function() { setWeek(n); }} style={{
+                flex: 1, padding: "5px 0", border: "none", borderRadius: 3, fontSize: 9,
+                fontWeight: active ? 800 : 500,
+                background: active ? "#143d24" : "#0a100a",
+                color: active ? "#6ee7b7" : "#2d4d2d",
+                cursor: "pointer",
+                borderBottom: active ? "2px solid #22c55e" : "2px solid transparent",
+              }}>{n}</button>
+            );
+          })}
+        </div>
+
+        {/* Alerts */}
+        {week === 5 && <div style={{ background: "#1a1a08", border: "1px solid #333308", borderRadius: 5, padding: "4px 8px", fontSize: 9, color: "#fde68a", marginTop: 5, textAlign: "center" }}>Semi-deload — drop 1 set, RPE 7, no failure</div>}
+        {week === 6 && <div style={{ background: "#081a10", border: "1px solid #0d3320", borderRadius: 5, padding: "4px 8px", fontSize: 9, color: "#6ee7b7", marginTop: 5, textAlign: "center" }}>Block 2 — new exercises, find your weights</div>}
+        {week === 10 && <div style={{ background: "#1a1a08", border: "1px solid #333308", borderRadius: 5, padding: "4px 8px", fontSize: 9, color: "#fde68a", marginTop: 5, textAlign: "center" }}>Full deload — RPE 6-7, recover fully</div>}
+
+        {/* Day tabs */}
+        <div style={{ display: "flex", gap: 3, margin: "7px 0 6px" }}>
+          {[1, 2, 4, 5].map(function(d) {
+            var di = DAYS[block][d];
+            var isActive = d === activeDay;
+            var labels = { 1: "MON", 2: "TUE", 4: "THU", 5: "FRI" };
+            return (
+              <button key={d} onClick={function() { setActiveDay(d); setOpenEx(null); }} style={{
+                flex: 1, padding: "7px 2px 5px", border: "none", borderRadius: 5, cursor: "pointer",
+                background: isActive ? "#143d24" : "#0a100a",
+                color: isActive ? "#e0f0e0" : "#2d4d2d",
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5 }}>{labels[d]}</div>
+                <div style={{ fontSize: 7, opacity: 0.7, marginTop: 1 }}>{di.name}</div>
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ borderBottom: "1px solid #111a11" }} />
+      </div>
+
+      {/* Exercises */}
+      {dayData && (
+        <div style={{ padding: "6px 10px" }}>
+          <div style={{ fontSize: 11, color: "#3d5c3d", marginBottom: 8, fontStyle: "italic", paddingLeft: 2 }}>{dayData.subtitle}</div>
+
+          {dayData.exercises.map(function(ex, idx) {
+            var isOpen = openEx === idx;
+            var prevAvg = getPrevAvg(week, activeDay, idx);
+            var prevSets = getPrevSets(week, activeDay, idx);
+            var hasPrev = prevSets.some(function(v) { return v; });
+
+            var currentLogs = [];
+            for (var ci = 0; ci < ex.sets; ci++) {
+              currentLogs.push(getLog(week, activeDay, idx, ci));
+            }
+            var hasLogs = currentLogs.some(function(v) { return v; });
+
+            return (
+              <div key={idx} style={{ background: "#0a100a", borderRadius: 8, marginBottom: 5, border: isOpen ? "1px solid #143d24" : "1px solid #111a11" }}>
+                {/* Header */}
+                <button onClick={function() { setOpenEx(isOpen ? null : idx); }} style={{
+                  width: "100%", border: "none", background: "none", padding: "10px 11px", cursor: "pointer",
+                  display: "flex", justifyContent: "space-between", alignItems: "center", textAlign: "left",
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 9, color: "#2d4d2d", fontWeight: 700, minWidth: 12 }}>{idx + 1}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#d4e4d4" }}>{ex.name}</span>
+                      <span style={{ background: TIER_COLORS[ex.tier] || "#4b5563", color: "#fff", padding: "1px 5px", borderRadius: 3, fontSize: 7, fontWeight: 700 }}>{ex.tier}</span>
+                      {hasLogs && <span style={{ width: 5, height: 5, borderRadius: 3, background: "#22c55e", display: "inline-block" }} />}
+                    </div>
+                    <div style={{ fontSize: 9, color: "#3d5c3d", marginTop: 2 }}>
+                      {ex.sets + "×" + ex.reps + " · " + ex.rest + " · Last: " + ex.lastRpe}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+                    {prevAvg !== null && (
+                      <div style={{ textAlign: "right", marginRight: 2 }}>
+                        <div style={{ fontSize: 7, color: "#2d4d2d", fontWeight: 600 }}>PREV</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>{prevAvg}</div>
+                      </div>
+                    )}
+                    <span style={{ color: "#2d4d2d", fontSize: 12, transform: isOpen ? "rotate(180deg)" : "none", transition: "0.15s ease" }}>▾</span>
+                  </div>
+                </button>
+
+                {/* Expanded */}
+                {isOpen && (
+                  <div style={{ padding: "0 11px 11px", borderTop: "1px solid #111a11" }}>
+                    <div style={{ fontSize: 10, color: "#6a8a6a", padding: "7px 0 5px", lineHeight: 1.5 }}>{ex.notes}</div>
+
+                    <div style={{ display: "flex", gap: 10, marginBottom: 8, fontSize: 9 }}>
+                      <span style={{ color: "#3d5c3d" }}>Early: <b style={{ color: "#a3c4a3" }}>{ex.earlyRpe}</b></span>
+                      <span style={{ color: "#3d5c3d" }}>Last: <b style={{ color: "#dc2626" }}>{ex.lastRpe}</b></span>
+                      <span style={{ color: "#3d5c3d" }}>Rest: <b style={{ color: "#a3c4a3" }}>{ex.rest}</b></span>
+                    </div>
+
+                    {/* Previous week */}
+                    {hasPrev && (
+                      <div style={{ background: "#060906", borderRadius: 5, padding: "5px 8px", marginBottom: 7 }}>
+                        <div style={{ fontSize: 7, color: "#2d4d2d", fontWeight: 700, marginBottom: 2 }}>LAST WEEK</div>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                          {prevSets.map(function(v, si) {
+                            if (!v) return null;
+                            return <span key={si} style={{ fontSize: 10, color: "#22c55e", fontWeight: 600 }}>{"S" + (si + 1) + ": " + v}</span>;
+                          })}
+                          {prevAvg !== null && <span style={{ fontSize: 10, color: "#3d5c3d", marginLeft: "auto" }}>{"avg " + prevAvg}</span>}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Set inputs */}
+                    <div style={{ display: "flex", gap: 5 }}>
+                      {currentLogs.map(function(val, si) {
+                        return (
+                          <div key={si} style={{ flex: 1 }}>
+                            <div style={{ fontSize: 7, color: "#2d4d2d", textAlign: "center", marginBottom: 2, fontWeight: 700 }}>{"SET " + (si + 1)}</div>
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              placeholder="—"
+                              value={val}
+                              onChange={function(e) { setLog(week, activeDay, idx, si, e.target.value); }}
+                              style={{
+                                width: "100%", padding: "9px 3px", border: "2px solid #152215", borderRadius: 6,
+                                background: "#060906", color: "#e0f0e0", fontSize: 17, fontWeight: 700,
+                                textAlign: "center", outline: "none", boxSizing: "border-box",
+                              }}
+                              onFocus={function(e) { e.target.style.borderColor = "#22c55e"; }}
+                              onBlur={function(e) { e.target.style.borderColor = "#152215"; }}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Subs */}
+                    <div style={{ marginTop: 8, paddingTop: 6, borderTop: "1px solid #111a11" }}>
+                      <div style={{ fontSize: 7, color: "#2d4d2d", fontWeight: 700, marginBottom: 2, letterSpacing: 0.5 }}>IF BUSY</div>
+                      <div style={{ fontSize: 9, color: "#4a6a4a", lineHeight: 1.6 }}>
+                        <span style={{ color: "#2563eb", fontWeight: 700 }}>1.</span> {ex.sub1}
+                        <br />
+                        <span style={{ color: "#2563eb", fontWeight: 700 }}>2.</span> {ex.sub2}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Bottom bar */}
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, background: "#060906",
+        borderTop: "1px solid #111a11", padding: "7px 0 22px",
+        display: "flex", justifyContent: "center", maxWidth: 430, margin: "0 auto",
+      }}>
+        <div style={{ display: "flex", gap: 36 }}>
+          <button onClick={function() {
+            var allKeys = Object.keys(state.logs || {});
+            var weekKeys = allKeys.filter(function(k) { return k.startsWith(week + "_"); });
+            var filled = weekKeys.filter(function(k) { return state.logs[k]; });
+            var total = [1,2,4,5].reduce(function(acc, d) {
+              return acc + DAYS[block][d].exercises.reduce(function(a, e) { return a + e.sets; }, 0);
+            }, 0);
+            var tip = week < 5 ? "Add reps before adding weight." : week === 5 ? "Deload — recover for Block 2!" : week === 6 ? "Find working weights for new exercises." : week < 10 ? "Push hard, keep form tight." : "Done! Nice work.";
+            alert("Week " + week + " — " + filled.length + "/" + total + " sets logged\n\n" + weekInfo.label + " · " + weekInfo.rpeNote + "\n\n" + tip);
+          }} style={{ background: "none", border: "none", color: "#3d5c3d", cursor: "pointer", textAlign: "center" }}>
+            <div style={{ fontSize: 16 }}>📊</div>
+            <div style={{ fontSize: 7, fontWeight: 700, marginTop: 1 }}>PROGRESS</div>
+          </button>
+          <button onClick={function() {
+            if (confirm("Reset ALL data? This cannot be undone.")) {
+              save({ week: 1, logs: {} });
+            }
+          }} style={{ background: "none", border: "none", color: "#252525", cursor: "pointer", textAlign: "center" }}>
+            <div style={{ fontSize: 16 }}>🔄</div>
+            <div style={{ fontSize: 7, fontWeight: 700, marginTop: 1 }}>RESET</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+  </script>
+</body>
+</html>
+
