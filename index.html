@@ -117,11 +117,12 @@ function getBlock(w){return w<=5?"block1":"block2";}
 function getWeekInfo(w){return PROGRAM[getBlock(w)].weeks.find(function(x){return x.num===w;});}
 function lk(w,d,e,s){return w+"_"+d+"_"+e+"_"+s;}
 function gl(w,d,e,s){return(state.logs||{})[lk(w,d,e,s)]||"";}
-function sl(w,d,e,s,v){state.logs[lk(w,d,e,s)]=v;saveState();}
+function sl(w,d,e,s,v){state.logs[lk(w,d,e,s)]=v;saveQuiet();}
 function pa(w,d,e){if(w<=1)return null;var pw=w-1;if(getBlock(pw)!==getBlock(w))return null;var vals=[];for(var i=0;i<4;i++){var v=(state.logs||{})[lk(pw,d,e,i)];if(v&&!isNaN(parseFloat(v)))vals.push(parseFloat(v));}if(!vals.length)return null;var sum=0;for(var j=0;j<vals.length;j++)sum+=vals[j];return Math.round(sum/vals.length*10)/10;}
 function ps(w,d,e){if(w<=1||getBlock(w-1)!==getBlock(w))return[];var r=[];for(var i=0;i<4;i++)r.push((state.logs||{})[lk(w-1,d,e,i)]||"");return r;}
 function loadState(){try{var s=localStorage.getItem(SK);if(s)state=JSON.parse(s);}catch(e){}}
-function saveState(){try{localStorage.setItem(SK,JSON.stringify(state));}catch(e){}render();}
+function saveQuiet(){try{localStorage.setItem(SK,JSON.stringify(state));}catch(e){}}
+function saveState(){saveQuiet();render();}
 function tierClass(t){return t==="S+"?"tier-sp":t==="S"?"tier-s":t==="A"?"tier-a":"tier-other";}
 
 function render(){
