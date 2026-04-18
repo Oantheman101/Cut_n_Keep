@@ -127,7 +127,7 @@ function tierClass(t){return t==="S+"?"tier-sp":t==="S"?"tier-s":t==="A"?"tier-a
 function render(){
   var w=state.week||1,blk=getBlock(w),wi=getWeekInfo(w),dd=DAYS[blk][activeDay];
   var typeLabels={intro:"INTRO",hard:"PUSH",deload:"DELOAD"};
-  var h='<div class="header"><div class="header-top"><div><div class="logo">\u{1F52A}\u{1F4AA} CUT & KEEP</div><div class="block-label">'+PROGRAM[blk].name+'</div></div>';
+  var h='<div class="header"><div class="header-top"><div><div class="logo">CUT & KEEP</div><div class="block-label">'+PROGRAM[blk].name+'</div></div>';
   h+='<div style="text-align:right"><div class="week-badge"><span class="type-pill type-'+wi.type+'">'+typeLabels[wi.type]+'</span><span class="week-num">W'+w+'</span></div>';
   h+='<div class="rpe-note">'+wi.rpeNote+'</div></div></div>';
   h+='<div class="week-bar">';
